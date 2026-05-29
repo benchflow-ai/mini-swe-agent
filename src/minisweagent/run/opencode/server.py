@@ -43,7 +43,9 @@ def _worktree() -> str:
 
 # --- SSE ---------------------------------------------------------------------
 def _sse(event: dict) -> str:
-    return f"event: message\ndata: {json.dumps(event)}\n\n"
+    # The TUI's /global/event consumer expects a GlobalEvent envelope and drops anything whose
+    # `directory` isn't "global" (or whose project doesn't match) — see opencode context/event.ts.
+    return f"event: message\ndata: {json.dumps({'directory': 'global', 'payload': event})}\n\n"
 
 
 async def global_event(request: Request) -> StreamingResponse:
