@@ -81,6 +81,11 @@ contree = [
     "contree-sdk>=0.2.0",
 ]
 
+opencode = [
+    "starlette",
+    "uvicorn",
+]
+
 [project.urls]
 Documentation = "https://mini-swe-agent.com/latest/"
 Repository = "https://github.com/SWE-agent/mini-swe-agent"
@@ -91,6 +96,7 @@ mini = "minisweagent.run.mini:app"
 mini-swe-agent = "minisweagent.run.mini:app"
 mini-extra = "minisweagent.run.utilities.mini_extra:main"
 mini-e= "minisweagent.run.utilities.mini_extra:main"
+mini-opencode = "minisweagent.run.opencode.server:main"
 
 [tool.setuptools]
 include-package-data = true
