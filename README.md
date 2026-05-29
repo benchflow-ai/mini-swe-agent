@@ -187,6 +187,21 @@ Read more in our [documentation](https://mini-swe-agent.com/latest/):
 * [FAQ](https://mini-swe-agent.com/latest/faq/)
 * [Contribute!](https://mini-swe-agent.com/latest/contributing/)
 
+## Run in the opencode TUI (this fork)
+
+This fork can run mini-swe-agent behind [opencode](https://opencode.ai)'s terminal UI — **self-contained**: a prebuilt TUI binary is bundled, so no external opencode repo or `bun` is needed at runtime.
+
+```bash
+git clone https://github.com/bingran-you/mini-swe-agent.git
+cd mini-swe-agent && pip install -e ".[opencode]"
+export ANTHROPIC_API_KEY=...        # or OPENAI_API_KEY / GEMINI_API_KEY / ...
+mini-opencode --attach --cwd /path/to/scratch/dir
+```
+
+This opens opencode's TUI in the same terminal. Pick any model, type a task, and the agent's bash steps render as native tool calls; errors show in the conversation. The agent runs commands **locally without confirmation** in `--cwd`, so point it at a scratch directory.
+
+Notes: the bundled binary is **macOS arm64**; on other platforms rebuild it (one-time). Full details: [docs/usage/opencode_tui.md](docs/usage/opencode_tui.md).
+
 ## Attribution
 
 If you found this work helpful, please consider citing the [SWE-agent paper](https://arxiv.org/abs/2405.15793) in your work:
