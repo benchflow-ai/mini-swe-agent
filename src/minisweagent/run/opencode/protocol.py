@@ -17,8 +17,9 @@ from . import ids
 DEFAULT_PROVIDER = "anthropic"
 DEFAULT_MODEL = "claude-sonnet-4-6"
 
+# Always-present latest models (litellm's registry may lag behind these).
 # providerID/modelID maps directly to a litellm model name (f"{providerID}/{modelID}").
-_CATALOG: dict[str, dict] = {
+_CURATED: dict[str, dict] = {
     "anthropic": {
         "name": "Anthropic",
         "models": {
@@ -44,6 +45,36 @@ _CATALOG: dict[str, dict] = {
         },
     },
 }
+
+_catalog_cache: dict[str, dict] | None = None
+
+
+def _catalog() -> dict[str, dict]:
+    """Comprehensive provider/model catalog: every chat model litellm knows + curated latest.
+
+    Built lazily and cached. Falls back to the curated set if litellm is unavailable.
+    """
+    global _catalog_cache
+    if _catalog_cache is not None:
+        return _catalog_cache
+    catalog: dict[str, dict] = {pid: {"name": m["name"], "models": dict(m["models"])} for pid, m in _CURATED.items()}
+    try:
+        import litellm
+
+        for key, info in litellm.model_cost.items():
+            if not isinstance(info, dict) or info.get("mode") != "chat":
+                continue
+            provider = info.get("litellm_provider")
+            if not provider or key in ("sample_spec",):
+                continue
+            model_id = key.split("/", 1)[1] if "/" in key else key
+            catalog.setdefault(provider, {"name": provider, "models": {}})["models"].setdefault(
+                model_id, {"name": model_id}
+            )
+    except Exception:
+        pass
+    _catalog_cache = catalog
+    return catalog
 
 
 def now_ms() -> int:
@@ -80,7 +111,7 @@ def _model_entry(model_id: str, meta: dict) -> dict:
 
 
 def _provider_entry(provider_id: str) -> dict:
-    meta = _CATALOG[provider_id]
+    meta = _catalog()[provider_id]
     return {
         "id": provider_id,
         "name": meta["name"],
@@ -92,15 +123,15 @@ def _provider_entry(provider_id: str) -> dict:
 
 
 def _default_map() -> dict[str, str]:
-    return {pid: next(iter(meta["models"])) for pid, meta in _CATALOG.items()}
+    return {pid: next(iter(meta["models"])) for pid, meta in _catalog().items()}
 
 
 def config_providers_response() -> dict:
-    return {"providers": [_provider_entry(p) for p in _CATALOG], "default": _default_map()}
+    return {"providers": [_provider_entry(p) for p in _catalog()], "default": _default_map()}
 
 
 def provider_list_response() -> dict:
-    return {"all": [_provider_entry(p) for p in _CATALOG], "default": _default_map(), "connected": list(_CATALOG)}
+    return {"all": [_provider_entry(p) for p in _catalog()], "default": _default_map(), "connected": list(_catalog())}
 
 
 def agents_response() -> list[dict]:
