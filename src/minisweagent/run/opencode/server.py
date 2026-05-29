@@ -312,7 +312,15 @@ def main() -> None:
     if not _wait_healthy(url):
         print("server failed to start", flush=True)
         return
-    opencode_cmd = shlex.split(os.getenv("OPENCODE_CMD", "opencode"))
+    # Resolve how to launch the TUI. Prefer the vendored standalone binary (self-contained —
+    # no external opencode repo needed); OPENCODE_CMD overrides; else a global `opencode`.
+    vendored = Path(__file__).resolve().parent / "bin" / "opencode"
+    if os.getenv("OPENCODE_CMD"):
+        opencode_cmd = shlex.split(os.environ["OPENCODE_CMD"])
+    elif vendored.exists():
+        opencode_cmd = [str(vendored)]
+    else:
+        opencode_cmd = ["opencode"]
     # The dev TUI (`bun .../packages/opencode/src/index.ts`) must launch from the opencode
     # package dir so bun loads its tsconfig (jsxImportSource=@opentui/solid). Infer it.
     attach_cwd = args.opencode_dir
