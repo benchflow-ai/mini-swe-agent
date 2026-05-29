@@ -180,6 +180,7 @@ Read more in our [documentation](https://mini-swe-agent.com/latest/):
 
 * [Quick start guide](https://mini-swe-agent.com/latest/quickstart/)
 * [Using the `mini` CLI](https://mini-swe-agent.com/latest/usage/mini/)
+* [Run mini in the opencode TUI](https://mini-swe-agent.com/latest/usage/opencode_tui/)
 * [Global configuration](https://mini-swe-agent.com/latest/advanced/global_configuration/)
 * [Yaml configuration files](https://mini-swe-agent.com/latest/advanced/yaml_configuration/)
 * [Power up with the cookbook](https://mini-swe-agent.com/latest/advanced/cookbook/)
