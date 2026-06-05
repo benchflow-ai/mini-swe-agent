@@ -176,6 +176,87 @@ cd mini-swe-agent && pip install -e .
 mini  # run the CLI
 ```
 
+### Verified source quick start with Claude Opus 4.8
+
+The following flow is the fastest way to start this fork from source, verify that
+your Anthropic key works, and run a real end-to-end `mini` agent loop.
+
+> [!IMPORTANT]
+> Do not commit API keys. Export them in your shell or keep them in a local
+> `.env` file outside the repository.
+
+```bash
+git clone https://github.com/benchflow-ai/mini-swe-agent.git
+cd mini-swe-agent
+
+# Create an isolated developer environment.
+uv venv .venv
+source .venv/bin/activate
+uv pip install -e ".[opencode,dev]"
+```
+
+Set your Anthropic API key for the current shell:
+
+```bash
+export ANTHROPIC_API_KEY="<your-anthropic-api-key>"
+```
+
+First, verify the key and model with a tiny direct LiteLLM request:
+
+```bash
+python - <<'PY'
+from litellm import completion
+
+model = "anthropic/claude-opus-4-8"
+response = completion(
+    model=model,
+    messages=[{"role": "user", "content": "Please answer exactly: startup ok"}],
+    max_tokens=32,
+)
+print("model:", model)
+print("answer:", response.choices[0].message.content.strip())
+PY
+```
+
+Then run a real `mini` end-to-end smoke test. This exercises the full path:
+CLI -> config loading -> LiteLLM -> model tool call -> local bash execution ->
+trajectory save.
+
+```bash
+MSWEA_MODEL_RETRY_STOP_AFTER_ATTEMPT=1 \
+MSWEA_COST_TRACKING=ignore_errors \
+mini -y --exit-immediately \
+  -m anthropic/claude-opus-4-8 \
+  -c mini.yaml \
+  -c model.model_kwargs.max_tokens=1024 \
+  -t 'This is an end-to-end smoke test. First run exactly this command: echo mini_e2e_ok. After observing it succeeds, finish by issuing exactly this command and nothing else: echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT.' \
+  -o /tmp/mini-swe-agent-opus48-e2e.traj.json
+```
+
+A successful run prints `mini_e2e_ok`, then exits after
+`COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`, and saves the trajectory to
+`/tmp/mini-swe-agent-opus48-e2e.traj.json`.
+
+Useful local checks:
+
+```bash
+MSWEA_SILENT_STARTUP=1 pytest -q \
+  tests/models tests/agents tests/config tests/utils \
+  tests/run/test_batch_progress.py tests/run/test_inspector.py
+
+MSWEA_SILENT_STARTUP=1 pytest -q \
+  tests/models/test_init.py tests/run/test_run_hello_world.py \
+  tests/run/test_local.py tests/run/test_save.py
+
+MSWEA_SILENT_STARTUP=1 ruff check src tests
+```
+
+If you see `invalid x-api-key`, your shell is using an invalid or stale
+`ANTHROPIC_API_KEY`; export a valid key again in the same shell. If you see
+LiteLLM cost metadata errors for a newly released model, keep
+`MSWEA_COST_TRACKING=ignore_errors` for the smoke test or add model pricing to a
+LiteLLM registry file.
+
 Read more in our [documentation](https://mini-swe-agent.com/latest/):
 
 * [Quick start guide](https://mini-swe-agent.com/latest/quickstart/)
@@ -193,9 +274,15 @@ This fork can run mini-swe-agent behind [opencode](https://opencode.ai)'s termin
 
 ```bash
 git clone https://github.com/bingran-you/mini-swe-agent.git
-cd mini-swe-agent && pip install -e ".[opencode]"
-export ANTHROPIC_API_KEY=...        # or OPENAI_API_KEY / GEMINI_API_KEY / ...
-mini-opencode --attach --cwd /path/to/scratch/dir
+cd mini-swe-agent
+
+uv venv .venv
+source .venv/bin/activate
+uv pip install -e ".[opencode]"
+
+export ANTHROPIC_API_KEY="<your-anthropic-api-key>"  # or OPENAI_API_KEY / GEMINI_API_KEY / ...
+mkdir -p /tmp/mini-swe-agent-scratch
+mini-opencode --attach --cwd /tmp/mini-swe-agent-scratch
 ```
 
 This opens opencode's TUI in the same terminal. Pick any model, type a task, and the agent's bash steps render as native tool calls; errors show in the conversation. The agent runs commands **locally without confirmation** in `--cwd`, so point it at a scratch directory.
