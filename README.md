@@ -272,6 +272,8 @@ Read more in our [documentation](https://mini-swe-agent.com/latest/):
 
 This fork can run mini-swe-agent behind [opencode](https://opencode.ai)'s terminal UI — **self-contained**: a prebuilt TUI binary is bundled, so no external opencode repo or `bun` is needed at runtime.
 
+Set `ANTHROPIC_API_KEY` for Claude, or set the corresponding provider key such as `OPENAI_API_KEY` or `GEMINI_API_KEY`.
+
 ```bash
 git clone https://github.com/bingran-you/mini-swe-agent.git
 cd mini-swe-agent
@@ -280,7 +282,7 @@ uv venv .venv
 source .venv/bin/activate
 uv pip install -e ".[opencode]"
 
-export ANTHROPIC_API_KEY="<your-anthropic-api-key>"  # or OPENAI_API_KEY / GEMINI_API_KEY / ...
+export ANTHROPIC_API_KEY="<your-anthropic-api-key>"
 mkdir -p /tmp/mini-swe-agent-scratch
 mini-opencode --attach --cwd /tmp/mini-swe-agent-scratch
 ```
