@@ -275,7 +275,7 @@ This fork can run mini-swe-agent behind [opencode](https://opencode.ai)'s termin
 Set `ANTHROPIC_API_KEY` for Claude, or set the corresponding provider key such as `OPENAI_API_KEY` or `GEMINI_API_KEY`.
 
 ```bash
-git clone https://github.com/bingran-you/mini-swe-agent.git
+git clone https://github.com/benchflow-ai/mini-swe-agent.git
 cd mini-swe-agent
 
 uv venv .venv
